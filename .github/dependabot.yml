@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directory: /sample-go-app
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      go-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: gomod
+    directory: /sample-go-app/tools
+    schedule:
+      interval: weekly
+      day: tuesday
+    groups:
+      go-tool-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: pip
+    directory: /sample-py-app
+    schedule:
+      interval: weekly
+      day: wednesday
+    groups:
+      pip-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directory: /sample-go-app
+    schedule:
+      interval: weekly
+      day: thursday
+    groups:
+      docker-updates:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: friday
+    groups:
+      action-updates:
+        update-types:
+          - minor
+          - patch

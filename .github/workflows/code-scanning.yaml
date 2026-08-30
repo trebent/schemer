@@ -1,0 +1,70 @@
+name: Code scanning
+
+run-name: "Scanning: ${{ github.event.pull_request.number || format('{0} #{1}', github.ref_name, github.run_number) }}"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.12.1
+          working-directory: sample-go-app
+          args: --output.sarif.path=results.sarif
+
+      - name: Upload SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.53.3
+        with:
+          sarif_file: sample-go-app/results.sarif
+
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Golang stable
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Go module cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/go/pkg/mod
+          key: govulncheck-go-mod-${{ hashFiles('sample-go-app/tools/go.sum') }}
+
+      - name: Go build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: govulncheck-go-build-${{ hashFiles('sample-go-app/**/*.go', 'sample-go-app/tools/go.mod', 'sample-go-app/tools/go.sum') }}
+          restore-keys: |
+            govulncheck-go-build-
+
+      - name: Run govulncheck
+        run: |
+          cd sample-go-app
+          go tool -modfile tools/go.mod govulncheck -format sarif ./... > results.sarif
+
+      - name: Upload SARIF report
+        if: always()
+        uses: github/codeql-action/upload-sarif@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        with:
+          sarif_file: sample-go-app/results.sarif

@@ -1,0 +1,27 @@
+name: Main branch protection
+
+run-name: "Main branch protection"
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  go:
+    name: Golang
+    uses: ./.github/workflows/callable-go.yaml
+
+  py:
+    name: Python
+    uses: ./.github/workflows/callable-py.yaml
+
+  image:
+    name: Image
+    uses: ./.github/workflows/callable-image.yaml
+    with:
+      push: false
