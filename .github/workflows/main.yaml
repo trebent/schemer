@@ -13,9 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build
     uses: ./.github/workflows/callable-build.yaml
 
   test:
-    name: Build
     uses: ./.github/workflows/callable-test.yaml
