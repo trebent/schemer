@@ -1,4 +1,4 @@
-name: Golang
+name: Test
 
 on:
   workflow_call:
@@ -7,11 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: sample-go-app
     strategy:
       matrix:
         # these aliases make sure to test both latest and previous minor
@@ -34,30 +31,24 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: build-go-mod-${{ hashFiles('sample-go-app/go.sum') }}
+          key: build-go-mod-${{ hashFiles('go.sum') }}
 
       - name: Go build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/go-build
-          key: build-go-build-${{ matrix.go-version-alias }}-${{ hashFiles('sample-go-app/**/*.go', 'sample-go-app/go.mod', 'sample-go-app/go.sum') }}
+          key: build-go-build-${{ matrix.go-version-alias }}-${{ hashFiles('**/*.go', 'go.mod', 'go.sum') }}
           restore-keys: |
             build-go-build-${{ matrix.go-version-alias }}-
 
-      - name: Install dependencies
-        run: go mod download
-
       - name: Run tests
-        run: go test ./... -coverprofile=coverage.out
+        run: make test
 
       - name: Generate coverage report
-        run: go tool cover -html=coverage.out -o coverage.html
+        run: go tool cover -html=build/coverage.out -o build/coverage.html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: go-coverage-report-${{ matrix.go-version-alias }}
-          path: sample-go-app/coverage.html
-
-      - name: Build
-        run: go build -o sample-go-app
+          path: build/coverage.html

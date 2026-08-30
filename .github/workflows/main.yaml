@@ -12,16 +12,10 @@ permissions:
   packages: write
 
 jobs:
-  go:
-    name: Golang
-    uses: ./.github/workflows/callable-go.yaml
+  build:
+    name: Build
+    uses: ./.github/workflows/callable-build.yaml
 
-  py:
-    name: Python
-    uses: ./.github/workflows/callable-py.yaml
-
-  image:
-    name: Image
-    uses: ./.github/workflows/callable-image.yaml
-    with:
-      push: false
+  test:
+    name: Build
+    uses: ./.github/workflows/callable-test.yaml
