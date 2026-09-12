@@ -7,6 +7,20 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+var (
+	dataUnescapedRefs = []byte(`{
+	"prop": ${ref:smth}
+}`)
+	dataCutRef = []byte(`{
+	"prop": ${r`)
+	dataEscapedRef = []byte(`{
+	"prop": $${ref:unrelated}
+}`)
+	dataHugeRef = []byte(`{
+	"prop": ${ref:ohwowthatisaverybigrefyouhavetheregrandmawowowowoowowowowoowowowowowoowowwowoowowowowoowowowowowoowowwowoowowowowoowowowowowoowowwowoowowowowoowowowowowoowow:default}
+}`)
+)
+
 func checkErr(err error, t *testing.T) {
 	t.Helper()
 	if err != nil {

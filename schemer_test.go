@@ -1,25 +1,70 @@
 package schemer
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 )
 
+func TestQuoteRefs(t *testing.T) {
+	t.Run("test quote single ref", func(t *testing.T) {
+		schemer := Schemer{}
+		schemer.data = dataUnescapedRefs
+		checkErr(schemer.quoteReferences(), t)
+
+		if !strings.Contains(string(schemer.quotedData), "\"${ref:smth}\"") {
+			t.Fatalf("Escaped data did not contain expected ref: %s", string(schemer.quotedData))
+		}
+	})
+
+	t.Run("test quote cut ref, no panic", func(t *testing.T) {
+		schemer := Schemer{}
+		schemer.data = dataCutRef
+		checkErr(schemer.quoteReferences(), t)
+
+		if !bytes.Equal(schemer.quotedData, schemer.data) {
+			t.Fatal("Quoted and original data should have been identical")
+		}
+	})
+
+	t.Run("test escaped ref, '$$'", func(t *testing.T) {
+		schemer := Schemer{}
+		schemer.data = dataEscapedRef
+		checkErr(schemer.quoteReferences(), t)
+
+		if !strings.Contains(string(schemer.quotedData), "\"prop\": $${ref:unrelated}") {
+			t.Fatal("Schemer incorrectly quoted data that was escaped")
+		}
+	})
+
+	t.Run("ref max length exceeded", func(t *testing.T) {
+		schemer := Schemer{}
+		schemer.data = dataHugeRef
+		err := schemer.quoteReferences()
+		if err == nil {
+			t.Fatal("Reference size exceeded, this should have failed.")
+		}
+	})
+}
+
 func TestParse(t *testing.T) {
-	loader := smallSchema(t)
-	data := readData("testdata/data/small_data.json", t)
+	t.Run("test parse small data", func(t *testing.T) {
+		loader := smallSchema(t)
+		data := readData("testdata/data/small_data.json", t)
 
-	schemer := New(loader)
-	schemer.Load(data)
+		schemer := New(loader)
+		schemer.Load(data)
 
-	target := &SmallCfg{}
-	checkErr(schemer.Parse(target), t)
+		target := &SmallCfg{}
+		checkErr(schemer.Parse(target), t)
 
-	if target.Property1 != "Hello, World!" {
-		t.Errorf("Expected Property1 to be 'Hello, World!', got '%s'", target.Property1)
-	}
-	if target.Property2 != 0 {
-		t.Errorf("Expected Property2 to be 0, got %d", target.Property2)
-	}
+		if target.Property1 != "Hello, World!" {
+			t.Errorf("Expected Property1 to be 'Hello, World!', got '%s'", target.Property1)
+		}
+		if target.Property2 != 0 {
+			t.Errorf("Expected Property2 to be 0, got %d", target.Property2)
+		}
+	})
 }
 
 func TestPathRef(t *testing.T) {

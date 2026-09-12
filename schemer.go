@@ -23,12 +23,17 @@ type (
 		// SupportingSchemas are the supporting schemas to validate against.
 		SupportingSchemas []gojsonschema.JSONLoader
 
-		data        []byte
-		escapedData []byte
+		data       []byte
+		quotedData []byte
 
 		values map[string]any
 		refs   map[string]string
 	}
+)
+
+const (
+	prefixCheckLength = 6
+	refMaxLength      = 150
 )
 
 var (
@@ -68,7 +73,7 @@ func (sch *Schemer) Parse(target any) error {
 
 	// Free allocated memory for intermediate data structures.
 	sch.data = nil
-	sch.escapedData = nil
+	sch.quotedData = nil
 	sch.values = nil
 	sch.refs = nil
 
@@ -76,7 +81,7 @@ func (sch *Schemer) Parse(target any) error {
 }
 
 func (sch *Schemer) resolveReferences() error {
-	if err := sch.escapeReferences(); err != nil {
+	if err := sch.quoteReferences(); err != nil {
 		return err
 	}
 
@@ -95,41 +100,59 @@ func (sch *Schemer) resolveReferences() error {
 	return nil
 }
 
-func (sch *Schemer) escapeReferences() error {
-	zerologr.V(100).Info("Escaping references")
-	sch.escapedData = sch.data
+func (sch *Schemer) quoteReferences() error {
+	zerologr.V(100).Info("Quoting all references")
+	sch.quotedData = sch.data
 	i := 0
-	for i < len(sch.data) {
-		//nolint:gocritic // ignore: nestedIfs
-		if sch.data[i] == '$' && isReference(sch.data[i:i+6]) && sch.data[i-1] != '"' {
-			zerologr.V(100).Info(
-				fmt.Sprintf("Found unescaped reference at index %d", i),
-			)
 
-			end := bytes.IndexByte(sch.data[i:], '}')
-			if end == -1 {
-				return errors.New("malformed reference: missing closing '}'")
-			}
+	for i < len(sch.data) {
+		// Can't be the start of a reference, keep iterating.
+		if sch.data[i] != '$' {
+			i++
+			continue
+		}
+
+		// Remaining length would not fit a reference, keep iterating.
+		if len(sch.data[i:]) < prefixCheckLength {
+			i++
+			continue
+		}
+
+		// Double dollar == escaped.
+		if i != 0 && sch.data[i] == '$' && sch.data[i-1] == '$' {
+			i++
+			continue
+		}
+
+		// Scan for closing bracket
+		end := bytes.IndexByte(sch.data[i:], '}')
+		if end == -1 {
+			return errors.New("malformed reference: missing closing '}'")
+		}
+
+		if (end - i) > refMaxLength {
+			return fmt.Errorf("reference at index %d exceeds max length %d", i, refMaxLength)
+		}
+
+		if isReference(sch.data[i:i+6]) && sch.data[i-1] != '"' {
+			zerologr.V(100).Info(
+				fmt.Sprintf("Found unquoted reference at index %d", i),
+			)
 
 			escapedRef := append([]byte{'"'}, sch.data[i:i+end+1]...)
 			escapedRef = append(escapedRef, '"')
 
-			zerologr.V(100).Info("Escaped reference: " + string(escapedRef))
+			zerologr.V(100).Info("Quoted reference: " + string(escapedRef))
 
-			sch.escapedData = bytes.Replace(sch.escapedData, sch.data[i:i+end+1], escapedRef, 1)
+			sch.quotedData = bytes.Replace(sch.quotedData, sch.data[i:i+end+1], escapedRef, 1)
 
-			zerologr.V(100).Info("Intermediate escaped data: \n" + string(sch.escapedData))
+			zerologr.V(100).Info("Intermediate escaped data: \n" + string(sch.quotedData))
 
 			i = i + end + 3
-		} else if sch.data[i] == '$' && isReference(sch.data[i:i+6]) {
+		} else if isReference(sch.data[i : i+6]) {
 			zerologr.V(100).Info(
-				fmt.Sprintf("Found already escaped reference at index %d", i),
+				fmt.Sprintf("Found already quoted reference at index %d", i),
 			)
-
-			end := bytes.IndexByte(sch.data[i:], '}')
-			if end == -1 {
-				return errors.New("malformed reference: missing closing '}'")
-			}
 
 			i = i + end + 2
 		} else {
@@ -137,7 +160,7 @@ func (sch *Schemer) escapeReferences() error {
 		}
 	}
 
-	zerologr.V(100).Info("Escaped references")
+	zerologr.V(100).Info("Quoted all references")
 
 	return nil
 }
@@ -150,7 +173,7 @@ func (sch *Schemer) walkForReferences() error {
 	zerologr.V(100).Info("Gathering references")
 
 	generic := make(map[string]any)
-	if err := json.Unmarshal(sch.escapedData, &generic); err != nil {
+	if err := json.Unmarshal(sch.quotedData, &generic); err != nil {
 		return err
 	}
 
