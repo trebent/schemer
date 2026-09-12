@@ -124,37 +124,38 @@ func (sch *Schemer) quoteReferences() error {
 			continue
 		}
 
-		// Scan for closing bracket
-		end := bytes.IndexByte(sch.data[i:], '}')
-		if end == -1 {
-			return errors.New("malformed reference: missing closing '}'")
-		}
+		if isReference(sch.data[i : i+6]) {
+			// Scan for closing bracket
+			end := bytes.IndexByte(sch.data[i:], '}')
+			if end == -1 {
+				return errors.New("malformed reference: missing closing '}'")
+			}
 
-		if (end - i) > refMaxLength {
-			return fmt.Errorf("reference at index %d exceeds max length %d", i, refMaxLength)
-		}
+			if (end - i) > refMaxLength {
+				return fmt.Errorf("reference at index %d exceeds max length %d", i, refMaxLength)
+			}
 
-		if isReference(sch.data[i:i+6]) && sch.data[i-1] != '"' {
-			zerologr.V(100).Info(
-				fmt.Sprintf("Found unquoted reference at index %d", i),
-			)
+			if sch.data[i-1] != '"' {
+				zerologr.V(100).Info(
+					fmt.Sprintf("Found unquoted reference at index %d", i),
+				)
 
-			escapedRef := append([]byte{'"'}, sch.data[i:i+end+1]...)
-			escapedRef = append(escapedRef, '"')
+				escapedRef := append([]byte{'"'}, sch.data[i:i+end+1]...)
+				escapedRef = append(escapedRef, '"')
 
-			zerologr.V(100).Info("Quoted reference: " + string(escapedRef))
+				zerologr.V(100).Info("Quoted reference: " + string(escapedRef))
 
-			sch.quotedData = bytes.Replace(sch.quotedData, sch.data[i:i+end+1], escapedRef, 1)
+				sch.quotedData = bytes.Replace(sch.quotedData, sch.data[i:i+end+1], escapedRef, 1)
 
-			zerologr.V(100).Info("Intermediate escaped data: \n" + string(sch.quotedData))
+				zerologr.V(100).Info("Intermediate escaped data: \n" + string(sch.quotedData))
 
-			i = i + end + 3
-		} else if isReference(sch.data[i : i+6]) {
-			zerologr.V(100).Info(
-				fmt.Sprintf("Found already quoted reference at index %d", i),
-			)
-
-			i = i + end + 2
+				i = i + end + 3
+			} else {
+				zerologr.V(100).Info(
+					fmt.Sprintf("Found already quoted reference at index %d", i),
+				)
+				i = i + end + 2
+			}
 		} else {
 			i++
 		}
