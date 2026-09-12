@@ -1,0 +1,4 @@
+{
+  "property1": "Hello, World!",
+  "property2": ${env:SMTH:666}
+}

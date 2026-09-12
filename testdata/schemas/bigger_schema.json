@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://trebent.com/schemer/schemas/bigger_schema.json",
+  "type": "object",
+  "description": "Bigger schema to validate Schemer.",
+  "properties": {
+    "obj": {
+      "type": "object",
+      "description": "An object.",
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "int": {
+          "type": "integer"
+        }
+      }
+    },
+    "obj2": {
+      "type": "object",
+      "description": "Another object.",
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "int": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

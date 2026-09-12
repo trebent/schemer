@@ -1,6 +1,3 @@
-GOPATH ?= $(shell go env GOPATH)
-GOBIN ?= $(GOPATH)/bin
-
 static-analysis/lint:
 	@golangci-lint run --fix
 

@@ -14,7 +14,7 @@ permissions:
 jobs:
   update-branches:
     runs-on: ubuntu-latest
-    if: github.repository == 'maansaake/github-actions-help'
+    if: github.repository == 'trebent/schemer'
     steps:
       - name: Generate Jeeves app token
         id: jeeves-token

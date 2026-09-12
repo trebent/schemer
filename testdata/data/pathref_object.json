@@ -1,0 +1,8 @@
+{
+  "obj": {
+    "string": "hej",
+    "int": 999
+  },
+  "obj2": ${ref:obj1
+  }
+}

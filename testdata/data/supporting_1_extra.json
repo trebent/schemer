@@ -1,0 +1,8 @@
+{
+  "property1": "Hello, World!",
+  "referencing": {
+    "supporting1": "hey",
+    "supporting2": 1999,
+    "something": "wrong"
+  }
+}

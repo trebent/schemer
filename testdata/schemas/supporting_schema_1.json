@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://trebent.com/schemer/schemas/supporting_schema_1.json",
+  "type": "object",
+  "description": "Supporting schema #1 to validate Schemer.",
+  "properties": {
+    "supporting1": {
+      "type": "string",
+      "description": "A string property."
+    },
+    "supporting2": {
+      "type": "integer",
+      "description": "An integer property."
+    }
+  },
+  "additionalProperties": false
+}

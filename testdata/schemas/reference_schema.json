@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://trebent.com/schemer/schemas/reference_schema.json",
+  "type": "object",
+  "description": "Referencing schema to validate Schemer.",
+  "properties": {
+    "property1": {
+      "type": "string",
+      "description": "A string property."
+    },
+    "referencing": {
+      "$ref": "http://trebent.com/schemer/schemas/supporting_schema_1.json"
+    }
+  },
+  "additionalProperties": false
+}

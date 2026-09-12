@@ -11,6 +11,14 @@
     "property2": {
       "type": "integer",
       "description": "An integer property."
+    },
+    "property3": {
+      "type": "string",
+      "description": "Another string property."
+    },
+    "property4": {
+      "type": "integer",
+      "description": "Another integer property."
     }
   },
   "additionalProperties": false
