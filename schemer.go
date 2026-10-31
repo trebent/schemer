@@ -2,6 +2,7 @@ package schemer
 
 import (
 	"bytes"
+	//nolint:revive // really?
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -54,10 +55,12 @@ func New(
 	}
 }
 
+//nolint:revive // ?
 func (sch *Schemer) Load(data []byte) {
 	sch.data = data
 }
 
+//nolint:revive // ?
 func (sch *Schemer) Parse(target any) error {
 	if err := sch.resolveReferences(); err != nil {
 		return err
@@ -100,6 +103,7 @@ func (sch *Schemer) resolveReferences() error {
 	return nil
 }
 
+//nolint:gocognit // welp
 func (sch *Schemer) quoteReferences() error {
 	zerologr.V(100).Info("Quoting all references")
 	sch.quotedData = sch.data
@@ -124,6 +128,7 @@ func (sch *Schemer) quoteReferences() error {
 			continue
 		}
 
+		//nolint:nestif // welp
 		if isReference(sch.data[i : i+6]) {
 			// Scan for closing bracket
 			end := bytes.IndexByte(sch.data[i:], '}')
